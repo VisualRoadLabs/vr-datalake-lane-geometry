@@ -1,0 +1,5 @@
+curvature:
+  straight_max_score: 0.06
+  slight_curve_max_score: 0.15
+  min_valid_lanes: 2
+  min_points_per_lane: 3
