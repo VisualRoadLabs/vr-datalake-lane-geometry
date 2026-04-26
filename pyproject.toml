@@ -1,0 +1,38 @@
+[project]
+name = "vr-datalake-lane-geometry"
+version = "0.1.0"
+description = "Image understanding pipeline for road scene classification, semantic labeling, and metadata enrichment from vehicle imagery."
+authors = [
+    {name = "mgonzalz",email = "maria.gonzalez@visualroad.net"}
+]
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "google-cloud-bigquery>=3.20.0,<4.0.0",
+    "google-cloud-storage>=2.16.0,<3.0.0",
+    "matplotlib>=3.8.0,<4.0.0",
+    "numpy>=1.26.0,<2.0.0",
+    "Pillow>=12.2.0,<13.0.0",
+    "PyYAML>=6.0.0,<7.0.0",
+]
+
+[project.scripts]
+lane-geometry-job = "lane_geometry.main:main"
+
+[tool.poetry]
+packages = [{include = "lane_geometry", from = "src"}]
+include = [
+    {path = "src/lane_geometry/configs/*.yaml", format = ["sdist", "wheel"]},
+]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+ipykernel = "^7.2.0"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
