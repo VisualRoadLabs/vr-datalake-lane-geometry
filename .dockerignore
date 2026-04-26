@@ -1,0 +1,17 @@
+.git
+.gitignore
+.github
+.pytest_cache
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.log
+scripts
+notebooks
+tmp
+dist
+build
+htmlcov
+.coverage
