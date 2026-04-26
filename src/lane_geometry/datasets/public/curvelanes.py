@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+from pathlib import PurePosixPath
 from typing import Any
 
 from lane_geometry.curvature.models import Lane, Point
-from lane_geometry.parsers.base import LaneParser
+from lane_geometry.datasets.base import DatasetDefinition, LaneParser, dedupe_candidates
+from lane_geometry.gcs.uris import split_gcs_uri
 
 
 class CurveLanesParser(LaneParser):
@@ -69,3 +71,42 @@ class CurveLanesParser(LaneParser):
             return Point(x=float(value[0]), y=float(value[1]))
 
         return None
+
+
+class CurveLanesDataset(DatasetDefinition):
+    source_type = "public"
+    source_dataset_id = "curvelanes_v1"
+    parser_class = CurveLanesParser
+
+    def label_uri_candidates(
+        self,
+        image_gcs_uri: str,
+        label_gcs_uri: str | None = None,
+    ) -> list[str]:
+        candidates: list[str] = []
+        if label_gcs_uri:
+            candidates.append(label_gcs_uri)
+        candidates.extend(self._native_label_candidates(image_gcs_uri))
+
+        return dedupe_candidates(candidates)
+
+    def _native_label_candidates(self, image_gcs_uri: str) -> list[str]:
+        bucket, blob = split_gcs_uri(image_gcs_uri)
+        path = PurePosixPath(blob)
+        suffixes = [".json", ".lines.json"]
+
+        blobs: list[str] = []
+        for suffix in suffixes:
+            blobs.append(str(path.with_suffix(suffix)))
+
+        parts = path.parts
+        for image_dir in ("images", "image"):
+            if image_dir in parts:
+                index = parts.index(image_dir)
+                for label_dir in ("labels", "label", "annotations"):
+                    label_parts = (*parts[:index], label_dir, *parts[index + 1 :])
+                    label_path = PurePosixPath(*label_parts)
+                    for suffix in suffixes:
+                        blobs.append(str(label_path.with_suffix(suffix)))
+
+        return [f"gs://{bucket}/{candidate}" for candidate in blobs]
